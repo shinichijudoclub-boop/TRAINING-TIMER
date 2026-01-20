@@ -11,13 +11,50 @@
 
     <style>
         :root { --bg: #000; --accent: #0a84ff; --work: #ff453a; --rest: #32d74b; --dim: #8e8e93; }
-        body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         
-        /* 容器逻辑：默认横屏布局 */
-        .container { display: flex; flex-direction: row; height: 100vh; width: 100vw; padding: env(safe-area-inset-top) 10px 10px 10px; gap: 10px; box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 核心逻辑：竖屏时强制旋转界面 */
+        @media screen and (orientation: portrait) {
+            #wrapper {
+                width: 100vh;
+                height: 100vw;
+                transform: rotate(90deg);
+                transform-origin: bottom left;
+                position: absolute;
+                top: -100vw;
+                left: 0;
+            }
+        }
+
+        @media screen and (orientation: landscape) {
+            #wrapper {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
+
+        .container { 
+            display: flex; 
+            flex-direction: row; 
+            height: 100%; 
+            width: 100%; 
+            padding: 20px 20px 20px calc(20px + env(safe-area-inset-left)); 
+            gap: 10px; 
+        }
 
         /* 左侧显示区 */
-        .display-side { flex: 1.3; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #111; border-radius: 24px; transition: all 0.3s ease; }
+        .display-side { flex: 1.3; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #111; border-radius: 24px; }
         #state-label { font-size: 2.8rem; font-weight: 900; letter-spacing: 6px; margin-bottom: 10px; }
         #timer-display { font-size: 22vw; font-weight: 200; line-height: 1; margin: -15px 0; font-variant-numeric: tabular-nums; transition: color 0.3s; }
         #round-info { font-size: 1.5rem; color: var(--dim); background: #222; padding: 8px 24px; border-radius: 50px; }
@@ -41,54 +78,45 @@
         .bg-start { background: var(--rest); color: #000; }
         .bg-pause { background: var(--accent); color: #fff; }
 
-        /* 引导横屏遮罩 */
-        #orientation-tip { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:1000; display:none; flex-direction:column; justify-content:center; align-items:center; }
-        
-        /* 启动遮罩 */
-        #init-layer { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+        #init-layer { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; justify-content:center; align-items:center; }
         .init-btn { padding:20px 60px; border-radius:50px; background:var(--rest); color:#000; border:none; font-size:1.8rem; font-weight:bold; cursor:pointer; }
-
-        @media (orientation: portrait) { #orientation-tip { display: flex; } }
     </style>
 </head>
 <body>
-
-<div id="orientation-tip">
-    <div style="font-size: 50px;">🔄</div>
-    <p>请旋转手机以横屏使用</p>
-</div>
 
 <div id="init-layer" onclick="initApp()">
     <button class="init-btn">开启训练</button>
 </div>
 
-<div class="container">
-    <div class="display-side" id="bg-box">
-        <div id="state-label">准备</div>
-        <div id="timer-display">00:00</div>
-        <div id="round-info">第 0 / 0 轮</div>
-    </div>
-
-    <div class="control-side">
-        <div class="config-grid">
-            <div class="input-item active" onclick="setActive('w_m')"><label>训练分</label><div class="val-text" id="w_m">0</div></div>
-            <div class="input-item" onclick="setActive('w_s')"><label>训练秒</label><div class="val-text" id="w_s">0</div></div>
-            <div class="input-item" onclick="setActive('r_m')"><label>间歇分</label><div class="val-text" id="r_m">0</div></div>
-            <div class="input-item" onclick="setActive('r_s')"><label>间歇秒</label><div class="val-text" id="r_s">0</div></div>
-            <div class="input-item" onclick="setActive('b_s')"><label>节奏秒</label><div class="val-text" id="b_s">0</div></div>
-            <div class="input-item" onclick="setActive('rounds')"><label>轮数</label><div class="val-text" id="rounds">0</div></div>
+<div id="wrapper">
+    <div class="container">
+        <div class="display-side">
+            <div id="state-label">准备</div>
+            <div id="timer-display">00:00</div>
+            <div id="round-info">第 0 / 0 轮</div>
         </div>
 
-        <div class="numpad">
-            <div class="num-btn" onclick="pressNum(1)">1</div><div class="num-btn" onclick="pressNum(2)">2</div><div class="num-btn" onclick="pressNum(3)">3</div>
-            <div class="num-btn" onclick="pressNum(4)">4</div><div class="num-btn" onclick="pressNum(5)">5</div><div class="num-btn" onclick="pressNum(6)">6</div>
-            <div class="num-btn" onclick="pressNum(7)">7</div><div class="num-btn" onclick="pressNum(8)">8</div><div class="num-btn" onclick="pressNum(9)">9</div>
-            <div class="num-btn num-del" onclick="pressNum('C')">清空</div><div class="num-btn" onclick="pressNum(0)">0</div><div class="num-btn num-del" onclick="pressNum('D')">退格</div>
-        </div>
-        
-        <div class="action-group">
-            <button id="mainBtn" class="btn-main bg-start" onclick="toggle()">开始训练</button>
-            <button class="btn-reset" onclick="hardReset()">重置</button>
+        <div class="control-side">
+            <div class="config-grid">
+                <div class="input-item active" onclick="setActive('w_m')"><label>训练分</label><div class="val-text" id="w_m">0</div></div>
+                <div class="input-item" onclick="setActive('w_s')"><label>训练秒</label><div class="val-text" id="w_s">0</div></div>
+                <div class="input-item" onclick="setActive('r_m')"><label>间歇分</label><div class="val-text" id="r_m">0</div></div>
+                <div class="input-item" onclick="setActive('r_s')"><label>间歇秒</label><div class="val-text" id="r_s">0</div></div>
+                <div class="input-item" onclick="setActive('b_s')"><label>节奏秒</label><div class="val-text" id="b_s">0</div></div>
+                <div class="input-item" onclick="setActive('rounds')"><label>轮数</label><div class="val-text" id="rounds">0</div></div>
+            </div>
+
+            <div class="numpad">
+                <div class="num-btn" onclick="pressNum(1)">1</div><div class="num-btn" onclick="pressNum(2)">2</div><div class="num-btn" onclick="pressNum(3)">3</div>
+                <div class="num-btn" onclick="pressNum(4)">4</div><div class="num-btn" onclick="pressNum(5)">5</div><div class="num-btn" onclick="pressNum(6)">6</div>
+                <div class="num-btn" onclick="pressNum(7)">7</div><div class="num-btn" onclick="pressNum(8)">8</div><div class="num-btn" onclick="pressNum(9)">9</div>
+                <div class="num-btn num-del" onclick="pressNum('C')">清空</div><div class="num-btn" onclick="pressNum(0)">0</div><div class="num-btn num-del" onclick="pressNum('D')">退格</div>
+            </div>
+            
+            <div class="action-group">
+                <button id="mainBtn" class="btn-main bg-start" onclick="toggle()">开始训练</button>
+                <button class="btn-reset" onclick="hardReset()">重置</button>
+            </div>
         </div>
     </div>
 </div>
@@ -105,9 +133,12 @@
     let noSleep = new NoSleep();
 
     function initApp() {
-        document.querySelectorAll('audio').forEach(a => { 
+        // 音频暖机修复
+        const audios = document.querySelectorAll('audio');
+        audios.forEach(a => { 
             a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); 
         });
+        
         noSleep.enable(); 
         document.getElementById('init-layer').style.display = 'none';
         updateUI();
@@ -217,7 +248,11 @@
 
     function playSound(id) {
         const s = document.getElementById(id);
-        if(s) { s.currentTime = 0; s.play().catch(()=>{}); }
+        if(s) {
+            s.currentTime = 0;
+            const p = s.play();
+            if (p !== undefined) p.catch(e => { s.load(); s.play(); });
+        }
     }
 </script>
 </body>
