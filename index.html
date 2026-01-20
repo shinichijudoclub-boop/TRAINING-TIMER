@@ -1,153 +1,127 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>柔道计时器</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>柔道计时器</title>
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="柔道计时器">
-    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <meta name="apple-mobile-web-app-title" content="柔道计时器">
+    
+    <link rel="apple-touch-icon" href="icon.png">
 
-    <style>
-        :root { --bg: #000; --accent: #0a84ff; --work: #ff453a; --rest: #32d74b; --dim: #8e8e93; }
-        
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    <style>
+        :root { --bg: #000; --accent: #0a84ff; --work: #ff453a; --rest: #32d74b; --dim: #8e8e93; }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        body { 
-            background: var(--bg); 
-            color: #fff; 
-            font-family: -apple-system, sans-serif; 
-            margin: 0; 
-            overflow: hidden; 
-            width: 100vw;
-            height: 100vh;
-        }
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            width: 100vw;
+            height: 100vh;
+        }
 
-        /* 核心逻辑：竖屏时强制旋转界面 */
-        @media screen and (orientation: portrait) {
-            #wrapper {
-                width: 100vh;
-                height: 100vw;
-                transform: rotate(90deg);
-                transform-origin: bottom left;
-                position: absolute;
-                top: -100vw;
-                left: 0;
-            }
-        }
+        /* 核心逻辑：竖屏时强制旋转界面 */
+        @media screen and (orientation: portrait) {
+            #wrapper {
+                width: 100vh;
+                height: 100vw;
+                transform: rotate(90deg);
+                transform-origin: bottom left;
+                position: absolute;
+                top: -100vw;
+                left: 0;
+            }
+        }
 
-        @media screen and (orientation: landscape) {
-            #wrapper {
-                width: 100vw;
-                height: 100vh;
-            }
-        }
+        @media screen and (orientation: landscape) {
+            #wrapper {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
 
-        .container { 
-            display: flex; 
-            flex-direction: row; 
-            height: 100%; 
-            width: 100%; 
-            padding: 20px 20px 20px calc(20px + env(safe-area-inset-left)); 
-            gap: 10px; 
-        }
+        .container { 
+            display: flex; 
+            flex-direction: row; 
+            height: 100%; 
+            width: 100%; 
+            padding: 20px 20px 20px calc(20px + env(safe-area-inset-left)); 
+            gap: 10px; 
+        }
 
-        /* 左侧显示区 - 修改为均匀分布，防止挤压 */
-        .display-side { 
-            flex: 1.3; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-evenly; 
-            align-items: center; 
-            background: #111; 
-            border-radius: 24px;
-            padding: 10px 0;
-        }
-        
-        #state-label { font-size: 2.8rem; font-weight: 900; letter-spacing: 6px; }
-        
-        /* 缩小字号并移除负 margin */
-        #timer-display { 
-            font-size: 20vw; 
-            font-weight: 200; 
-            line-height: 1; 
-            margin: 0; 
-            font-variant-numeric: tabular-nums; 
-            transition: color 0.3s; 
-        }
-        
-        /* 增加顶部间距，确保不与数字重叠 */
-        #round-info { 
-            font-size: 1.5rem; 
-            color: var(--dim); 
-            background: #222; 
-            padding: 8px 24px; 
-            border-radius: 50px; 
-            margin-top: 15px; 
-        }
+        /* 左侧显示区 */
+        .display-side { flex: 1.3; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #111; border-radius: 24px; }
+        #state-label { font-size: 2.8rem; font-weight: 900; letter-spacing: 6px; margin-bottom: 10px; }
+        #timer-display { font-size: 22vw; font-weight: 200; line-height: 1; margin: -15px 0; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+        #round-info { font-size: 1.5rem; color: var(--dim); background: #222; padding: 8px 24px; border-radius: 50px; }
 
-        /* 右侧操作区 */
-        .control-side { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
-        .input-item { background: #1c1c1e; padding: 6px; border-radius: 12px; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .input-item.active { border-color: var(--accent); background: #2c2c2e; }
-        .input-item label { font-size: 0.65rem; color: var(--dim); margin-bottom: 2px; }
-        .val-text { font-size: 1.2rem; font-weight: bold; }
+        /* 右侧操作区 */
+        .control-side { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+        .input-item { background: #1c1c1e; padding: 6px; border-radius: 12px; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .input-item.active { border-color: var(--accent); background: #2c2c2e; }
+        .input-item label { font-size: 0.65rem; color: var(--dim); margin-bottom: 2px; }
+        .val-text { font-size: 1.2rem; font-weight: bold; }
 
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1; background: #1c1c1e; padding: 8px; border-radius: 15px; }
-        .num-btn { background: #3a3a3c; border: none; color: #fff; font-size: 1.3rem; font-weight: bold; border-radius: 10px; display: flex; justify-content: center; align-items: center; }
-        .num-btn:active { background: var(--accent); }
-        .num-del { background: #48484a; font-size: 1rem; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1; background: #1c1c1e; padding: 8px; border-radius: 15px; }
+        .num-btn { background: #3a3a3c; border: none; color: #fff; font-size: 1.3rem; font-weight: bold; border-radius: 10px; display: flex; justify-content: center; align-items: center; }
+        .num-btn:active { background: var(--accent); }
+        .num-del { background: #48484a; font-size: 1rem; }
 
-        .action-group { display: flex; gap: 8px; height: 60px; }
-        .btn-main { flex: 2; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; }
-        .btn-reset { flex: 1; border-radius: 15px; border: none; background: #3a3a3c; color: #fff; font-size: 1rem; font-weight: bold; }
-        .bg-start { background: var(--rest); color: #000; }
-        .bg-pause { background: var(--accent); color: #fff; }
+        .action-group { display: flex; gap: 8px; height: 60px; }
+        .btn-main { flex: 2; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; }
+        .btn-reset { flex: 1; border-radius: 15px; border: none; background: #3a3a3c; color: #fff; font-size: 1rem; font-weight: bold; }
+        .bg-start { background: var(--rest); color: #000; }
+        .bg-pause { background: var(--accent); color: #fff; }
 
-        #init-layer { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; justify-content:center; align-items:center; }
-        .init-btn { padding:20px 60px; border-radius:50px; background:var(--rest); color:#000; border:none; font-size:1.8rem; font-weight:bold; cursor:pointer; }
-    </style>
+        #init-layer { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; justify-content:center; align-items:center; }
+        .init-btn { padding:20px 60px; border-radius:50px; background:var(--rest); color:#000; border:none; font-size:1.8rem; font-weight:bold; cursor:pointer; }
+    </style>
 </head>
 <body>
 
 <div id="init-layer" onclick="initApp()">
-    <button class="init-btn">开启训练</button>
+    <button class="init-btn">开启训练</button>
 </div>
 
 <div id="wrapper">
-    <div class="container">
-        <div class="display-side">
-            <div id="state-label">准备</div>
-            <div id="timer-display">00:00</div>
-            <div id="round-info">第 0 / 0 轮</div>
-        </div>
+    <div class="container">
+        <div class="display-side">
+            <div id="state-label">准备</div>
+            <div id="timer-display">00:00</div>
+            <div id="round-info">第 0 / 0 轮</div>
+        </div>
 
-        <div class="control-side">
-            <div class="config-grid">
-                <div class="input-item active" onclick="setActive('w_m')"><label>训练分</label><div class="val-text" id="w_m">0</div></div>
-                <div class="input-item" onclick="setActive('w_s')"><label>训练秒</label><div class="val-text" id="w_s">0</div></div>
-                <div class="input-item" onclick="setActive('r_m')"><label>间歇分</label><div class="val-text" id="r_m">0</div></div>
-                <div class="input-item" onclick="setActive('r_s')"><label>间歇秒</label><div class="val-text" id="r_s">0</div></div>
-                <div class="input-item" onclick="setActive('b_s')"><label>节奏秒</label><div class="val-text" id="b_s">0</div></div>
-                <div class="input-item" onclick="setActive('rounds')"><label>轮数</label><div class="val-text" id="rounds">0</div></div>
-            </div>
+        <div class="control-side">
+            <div class="config-grid">
+                <div class="input-item active" onclick="setActive('w_m')"><label>训练分</label><div class="val-text" id="w_m">0</div></div>
+                <div class="input-item" onclick="setActive('w_s')"><label>训练秒</label><div class="val-text" id="w_s">0</div></div>
+                <div class="input-item" onclick="setActive('r_m')"><label>间歇分</label><div class="val-text" id="r_m">0</div></div>
+                <div class="input-item" onclick="setActive('r_s')"><label>间歇秒</label><div class="val-text" id="r_s">0</div></div>
+                <div class="input-item" onclick="setActive('b_s')"><label>节奏秒</label><div class="val-text" id="b_s">0</div></div>
+                <div class="input-item" onclick="setActive('rounds')"><label>轮数</label><div class="val-text" id="rounds">0</div></div>
+            </div>
 
-            <div class="numpad">
-                <div class="num-btn" onclick="pressNum(1)">1</div><div class="num-btn" onclick="pressNum(2)">2</div><div class="num-btn" onclick="pressNum(3)">3</div>
-                <div class="num-btn" onclick="pressNum(4)">4</div><div class="num-btn" onclick="pressNum(5)">5</div><div class="num-btn" onclick="pressNum(6)">6</div>
-                <div class="num-btn" onclick="pressNum(7)">7</div><div class="num-btn" onclick="pressNum(8)">8</div><div class="num-btn" onclick="pressNum(9)">9</div>
-                <div class="num-btn num-del" onclick="pressNum('C')">清空</div><div class="num-btn" onclick="pressNum(0)">0</div><div class="num-btn num-del" onclick="pressNum('D')">退格</div>
-            </div>
-            
-            <div class="action-group">
-                <button id="mainBtn" class="btn-main bg-start" onclick="toggle()">开始训练</button>
-                <button class="btn-reset" onclick="hardReset()">重置</button>
-            </div>
-        </div>
-    </div>
+            <div class="numpad">
+                <div class="num-btn" onclick="pressNum(1)">1</div><div class="num-btn" onclick="pressNum(2)">2</div><div class="num-btn" onclick="pressNum(3)">3</div>
+                <div class="num-btn" onclick="pressNum(4)">4</div><div class="num-btn" onclick="pressNum(5)">5</div><div class="num-btn" onclick="pressNum(6)">6</div>
+                <div class="num-btn" onclick="pressNum(7)">7</div><div class="num-btn" onclick="pressNum(8)">8</div><div class="num-btn" onclick="pressNum(9)">9</div>
+                <div class="num-btn num-del" onclick="pressNum('C')">清空</div><div class="num-btn" onclick="pressNum(0)">0</div><div class="num-btn num-del" onclick="pressNum('D')">退格</div>
+            </div>
+            
+            <div class="action-group">
+                <button id="mainBtn" class="btn-main bg-start" onclick="toggle()">开始训练</button>
+                <button class="btn-reset" onclick="hardReset()">重置</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <audio id="snd_countdown" src="countdown_3s.mp3" preload="auto"></audio>
@@ -157,131 +131,132 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
 
 <script>
-    let timer = null, timeLeft = 0, totalWorkTime = 0, curRound = 1, state = "IDLE", isPaused = false, activeId = 'w_m';
-    let isNewInput = true;
-    let noSleep = new NoSleep();
+    let timer = null, timeLeft = 0, totalWorkTime = 0, curRound = 1, state = "IDLE", isPaused = false, activeId = 'w_m';
+    let isNewInput = true;
+    let noSleep = new NoSleep();
 
-    function initApp() {
-        const audios = document.querySelectorAll('audio');
-        audios.forEach(a => { 
-            a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); 
-        });
-        
-        noSleep.enable(); 
-        document.getElementById('init-layer').style.display = 'none';
-        updateUI();
-    }
+    function initApp() {
+        const audios = document.querySelectorAll('audio');
+        audios.forEach(a => { 
+            a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); 
+        });
+        
+        noSleep.enable(); 
+        document.getElementById('init-layer').style.display = 'none';
+        updateUI();
+    }
 
-    function setActive(id) {
-        document.querySelectorAll('.input-item').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).parentElement.classList.add('active');
-        activeId = id; isNewInput = true; 
-    }
+    function setActive(id) {
+        document.querySelectorAll('.input-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).parentElement.classList.add('active');
+        activeId = id; isNewInput = true; 
+    }
 
-    function pressNum(v) {
-        let el = document.getElementById(activeId);
-        if (v === 'C') { el.innerText = '0'; isNewInput = true; } 
-        else if (v === 'D') { el.innerText = el.innerText.length > 1 ? el.innerText.slice(0,-1) : '0'; } 
-        else {
-            if (isNewInput) { el.innerText = v; isNewInput = false; } 
-            else { el.innerText = (el.innerText === '0' ? v : el.innerText + v).slice(-2); }
-        }
-    }
+    function pressNum(v) {
+        let el = document.getElementById(activeId);
+        if (v === 'C') { el.innerText = '0'; isNewInput = true; } 
+        else if (v === 'D') { el.innerText = el.innerText.length > 1 ? el.innerText.slice(0,-1) : '0'; } 
+        else {
+            if (isNewInput) { el.innerText = v; isNewInput = false; } 
+            else { el.innerText = (el.innerText === '0' ? v : el.innerText + v).slice(-2); }
+        }
+    }
 
-    function hardReset() {
-        if (timer) clearInterval(timer);
-        timer = null; state = "IDLE"; isPaused = false; timeLeft = 0; curRound = 1;
-        document.querySelectorAll('.val-text').forEach(el => el.innerText = '0');
-        document.getElementById('mainBtn').innerText = "开始训练";
-        document.getElementById('mainBtn').className = "btn-main bg-start";
-        isNewInput = true; updateUI();
-    }
+    function hardReset() {
+        if (timer) clearInterval(timer);
+        timer = null; state = "IDLE"; isPaused = false; timeLeft = 0; curRound = 1;
+        document.querySelectorAll('.val-text').forEach(el => el.innerText = '0');
+        document.getElementById('mainBtn').innerText = "开始训练";
+        document.getElementById('mainBtn').className = "btn-main bg-start";
+        isNewInput = true; updateUI();
+    }
 
-    function toggle() {
-        if (state === "IDLE" || state === "FINISH") startLogic();
-        else { 
-            isPaused = !isPaused; 
-            document.getElementById('mainBtn').innerText = isPaused ? "继续" : "暂停";
-            document.getElementById('mainBtn').className = isPaused ? "btn-main bg-start" : "btn-main bg-pause";
-        }
-    }
+    function toggle() {
+        if (state === "IDLE" || state === "FINISH") startLogic();
+        else { 
+            isPaused = !isPaused; 
+            document.getElementById('mainBtn').innerText = isPaused ? "继续" : "暂停";
+            document.getElementById('mainBtn').className = isPaused ? "btn-main bg-start" : "btn-main bg-pause";
+        }
+    }
 
-    function startLogic() {
-        let totalW = (parseInt(document.getElementById('w_m').innerText)||0)*60 + (parseInt(document.getElementById('w_s').innerText)||0);
-        if (totalW <= 0) { alert("请设置训练时间"); return; }
-        state = "PREP"; timeLeft = 5; curRound = 1; isPaused = false;
-        document.getElementById('mainBtn').innerText = "暂停";
-        document.getElementById('mainBtn').className = "btn-main bg-pause";
-        if (timer) clearInterval(timer);
-        timer = setInterval(tick, 1000);
-        updateUI();
-    }
+    function startLogic() {
+        let totalW = (parseInt(document.getElementById('w_m').innerText)||0)*60 + (parseInt(document.getElementById('w_s').innerText)||0);
+        if (totalW <= 0) { alert("请设置训练时间"); return; }
+        state = "PREP"; timeLeft = 5; curRound = 1; isPaused = false;
+        document.getElementById('mainBtn').innerText = "暂停";
+        document.getElementById('mainBtn').className = "btn-main bg-pause";
+        if (timer) clearInterval(timer);
+        timer = setInterval(tick, 1000);
+        updateUI();
+    }
 
-    function tick() {
-        if (isPaused) return;
-        if ((state === "PREP" || state === "REST") && timeLeft === 3) playSound('snd_countdown');
-        if (state === "WORK") {
-            const step = parseInt(document.getElementById('b_s').innerText) || 0;
-            let elapsed = totalWorkTime - (timeLeft - 1); 
-            if (step > 0 && timeLeft > 1) {
-                if (elapsed > 0 && elapsed % step === 0) playSound('snd_step');
-            }
-            if (timeLeft === 1) playSound('snd_over');
-        }
-        if (timeLeft > 0) { timeLeft--; updateUI(); } else { handleTransition(); }
-    }
+    function tick() {
+        if (isPaused) return;
+        if ((state === "PREP" || state === "REST") && timeLeft === 3) playSound('snd_countdown');
+        if (state === "WORK") {
+            const step = parseInt(document.getElementById('b_s').innerText) || 0;
+            let elapsed = totalWorkTime - (timeLeft - 1); 
+            if (step > 0 && timeLeft > 1) {
+                if (elapsed > 0 && elapsed % step === 0) playSound('snd_step');
+            }
+            if (timeLeft === 1) playSound('snd_over');
+        }
+        if (timeLeft > 0) { timeLeft--; updateUI(); } else { handleTransition(); }
+    }
 
-    function handleTransition() {
-        let totalRounds = parseInt(document.getElementById('rounds').innerText) || 1;
-        if (state === "PREP") switchTo("WORK");
-        else if (state === "WORK") {
-            if (curRound >= totalRounds) finish(); else switchTo("REST");
-        } else if (state === "REST") {
-            curRound++; switchTo("WORK");
-        }
-    }
+    function handleTransition() {
+        let totalRounds = parseInt(document.getElementById('rounds').innerText) || 1;
+        if (state === "PREP") switchTo("WORK");
+        else if (state === "WORK") {
+            if (curRound >= totalRounds) finish(); else switchTo("REST");
+        } else if (state === "REST") {
+            curRound++; switchTo("WORK");
+        }
+    }
 
-    function switchTo(ns) {
-        state = ns;
-        const prefix = (state === "WORK") ? 'w_' : 'r_';
-        timeLeft = (parseInt(document.getElementById(prefix + 'm').innerText)||0)*60 + (parseInt(document.getElementById(prefix + 's').innerText)||0);
-        if (state === "WORK") totalWorkTime = timeLeft; 
-        updateUI();
-    }
+    function switchTo(ns) {
+        state = ns;
+        const prefix = (state === "WORK") ? 'w_' : 'r_';
+        timeLeft = (parseInt(document.getElementById(prefix + 'm').innerText)||0)*60 + (parseInt(document.getElementById(prefix + 's').innerText)||0);
+        if (state === "WORK") totalWorkTime = timeLeft; 
+        updateUI();
+    }
 
-    function updateUI() {
-        const mm = Math.floor(timeLeft/60).toString().padStart(2,'0');
-        const ss = (timeLeft%60).toString().padStart(2,'0');
-        const display = document.getElementById('timer-display');
-        const label = document.getElementById('state-label');
-        display.innerText = `${mm}:${ss}`;
+    function updateUI() {
+        const mm = Math.floor(timeLeft/60).toString().padStart(2,'0');
+        const ss = (timeLeft%60).toString().padStart(2,'0');
+        const display = document.getElementById('timer-display');
+        const label = document.getElementById('state-label');
+        display.innerText = `${mm}:${ss}`;
 
-        if(state === "WORK") {
-            label.innerText = "训练中";
-            label.style.color = display.style.color = "var(--work)";
-        } else if(state === "REST") {
-            label.innerText = "间歇中";
-            label.style.color = display.style.color = "var(--rest)";
-        } else if(state === "FINISH") {
-            label.innerText = "完成";
-            label.style.color = display.style.color = "var(--accent)";
-        } else {
-            label.innerText = "准备";
-            label.style.color = display.style.color = "#FFF";
-        }
-        document.getElementById('round-info').innerText = `第 ${state==="IDLE" || state==="FINISH" ? 0 : curRound} / ${document.getElementById('rounds').innerText} 轮`;
-    }
+        if(state === "WORK") {
+            label.innerText = "训练中";
+            label.style.color = display.style.color = "var(--work)";
+        } else if(state === "REST") {
+            label.innerText = "间歇中";
+            label.style.color = display.style.color = "var(--rest)";
+        } else if(state === "FINISH") {
+            label.innerText = "完成";
+            label.style.color = display.style.color = "var(--accent)";
+        } else {
+            label.innerText = "准备";
+            label.style.color = display.style.color = "#FFF";
+        }
+        document.getElementById('round-info').innerText = `第 ${state==="IDLE" || state==="FINISH" ? 0 : curRound} / ${document.getElementById('rounds').innerText} 轮`;
+    }
 
-    function finish() { clearInterval(timer); timer = null; state = "FINISH"; timeLeft = 0; updateUI(); document.getElementById('mainBtn').innerText = "重新开始"; }
+    function finish() { clearInterval(timer); timer = null; state = "FINISH"; timeLeft = 0; updateUI(); document.getElementById('mainBtn').innerText = "重新开始"; }
 
-    function playSound(id) {
-        const s = document.getElementById(id);
-        if(s) {
-            s.currentTime = 0;
-            const p = s.play();
-            if (p !== undefined) p.catch(e => { s.load(); s.play(); });
-        }
-    }
+    function playSound(id) {
+        const s = document.getElementById(id);
+        if(s) {
+            s.currentTime = 0;
+            const p = s.play();
+            if (p !== undefined) p.catch(e => { s.load(); s.play(); });
+        }
+    }
 </script>
 </body>
 </html>
+  
